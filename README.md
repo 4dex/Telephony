@@ -10,11 +10,9 @@
 
 # Telephony
 
-## Thank you for checking out the Telephony plugin. Unfortunately, this plugin is no longer actively maintained.
-
-|:exclamation: This plugin currently only works on Android Platform|
-|------------------------------------------------------------------|
-
+This is a fork to continue updates to the original telephony project.
+Following Flutter setup instructions from here: https://docs.flutter.dev/development/platform-integration/platform-channels
+Referencing Android API here: http://android.cn-mirrors.com/reference/android/provider/Telephony.Mms.html
 
 A Flutter plugin to use telephony features such as
 - Send SMS Messages
