@@ -182,6 +182,22 @@ class Telephony {
         List.empty();
   }
 
+  Future<List<MmsMessage>> getInboxMMS(
+      {List<MMSColumn> columns = DEFAULT_MMS_COLUMNS,
+      SmsFilter? filter,
+      List<OrderBy>? sortOrder}) async {
+    assert(_platform.isAndroid == true, "Can only be called on Android.");
+    final args = _getArguments(columns, filter, sortOrder);
+
+    final messages =
+        await _foregroundChannel.invokeMethod<List?>(GET_ALL_INBOX_MMS, args);
+
+    return messages
+            ?.map((message) => MmsMessage.fromMap(message, columns))
+            .toList(growable: false) ??
+        List.empty();
+  }
+
   ///
   /// Query SMS Outbox / Sent messages.
   ///
@@ -699,4 +715,133 @@ class SmsConversation {
         this.snippet == other.snippet &&
         this.messageCount == other.messageCount;
   }
+}
+
+// 4dex ADDED THIS
+class MmsMessage {
+  int? id;
+  String? address;
+  String? body;
+  int? date;
+  int? dateSent;
+  bool? read;
+  bool? seen;
+  String? subject;
+  int? subscriptionId;
+  int? threadId;
+  SmsType? type; // TODO: change to MmsType
+  SmsStatus? status; // TODO: change to MmsStatus
+  String? serviceCenterAddress;
+
+  /// ## Do not call this method. This method is visible only for testing.
+  @visibleForTesting
+  MmsMessage.fromMap(Map rawMessage, List<MMSColumn> columns) {
+    final message = Map.castFrom<dynamic, dynamic, String, dynamic>(rawMessage);
+    for (var column in columns) {
+      debugPrint('Column is ${column._columnName}');
+      final value = message[column._columnName];
+      switch (column._columnName) {
+        case _SmsProjections.ID:
+          this.id = int.tryParse(value);
+          break;
+        case _SmsProjections.ORIGINATING_ADDRESS:
+        case _SmsProjections.ADDRESS:
+          this.address = value;
+          break;
+        case _SmsProjections.MESSAGE_BODY:
+        case _SmsProjections.BODY:
+          this.body = value;
+          break;
+        case _SmsProjections.DATE:
+        case _SmsProjections.TIMESTAMP:
+          this.date = int.tryParse(value);
+          break;
+        case _SmsProjections.DATE_SENT:
+          this.dateSent = int.tryParse(value);
+          break;
+        case _SmsProjections.READ:
+          this.read = int.tryParse(value) == 0 ? false : true;
+          break;
+        case _SmsProjections.SEEN:
+          this.seen = int.tryParse(value) == 0 ? false : true;
+          break;
+        case _SmsProjections.STATUS:
+          switch (int.tryParse(value)) {
+            case 0:
+              this.status = SmsStatus.STATUS_COMPLETE;
+              break;
+            case 32:
+              this.status = SmsStatus.STATUS_PENDING;
+              break;
+            case 64:
+              this.status = SmsStatus.STATUS_FAILED;
+              break;
+            case -1:
+            default:
+              this.status = SmsStatus.STATUS_NONE;
+              break;
+          }
+          break;
+        case _SmsProjections.SUBJECT:
+          this.subject = value;
+          break;
+        case _SmsProjections.SUBSCRIPTION_ID:
+          this.subscriptionId = int.tryParse(value);
+          break;
+        case _SmsProjections.THREAD_ID:
+          this.threadId = int.tryParse(value);
+          break;
+        case _SmsProjections.TYPE:
+          var smsTypeIndex = int.tryParse(value);
+          this.type =
+              smsTypeIndex != null ? SmsType.values[smsTypeIndex] : null;
+          break;
+        case _SmsProjections.SERVICE_CENTER_ADDRESS:
+          this.serviceCenterAddress = value;
+          break;
+      }
+    }
+  }
+
+  /// ## Do not call this method. This method is visible only for testing.
+  @visibleForTesting
+  bool equals(MmsMessage other) {
+    return this.id == other.id &&
+        this.address == other.address &&
+        this.body == other.body &&
+        this.date == other.date &&
+        this.dateSent == other.dateSent &&
+        this.read == other.read &&
+        this.seen == other.seen &&
+        this.subject == other.subject &&
+        this.subscriptionId == other.subscriptionId &&
+        this.threadId == other.threadId &&
+        this.type == other.type &&
+        this.status == other.status;
+  }
+}
+
+/// Represents all the possible parameters for a SMS
+class MMSColumn extends _TelephonyColumn {
+  final String _columnName;
+
+  const MMSColumn._(this._columnName);
+
+  static const ID = MMSColumn._(_SmsProjections.ID);
+  static const ADDRESS = MMSColumn._(_SmsProjections.ADDRESS);
+  static const SERVICE_CENTER_ADDRESS =
+      MMSColumn._(_SmsProjections.SERVICE_CENTER_ADDRESS);
+  static const BODY = MMSColumn._(_SmsProjections.BODY);
+  static const DATE = MMSColumn._(_SmsProjections.DATE);
+  static const DATE_SENT = MMSColumn._(_SmsProjections.DATE_SENT);
+  static const READ = MMSColumn._(_SmsProjections.READ);
+  static const SEEN = MMSColumn._(_SmsProjections.SEEN);
+  static const STATUS = MMSColumn._(_SmsProjections.STATUS);
+  static const SUBJECT = MMSColumn._(_SmsProjections.SUBJECT);
+  static const SUBSCRIPTION_ID = MMSColumn._(_SmsProjections.SUBSCRIPTION_ID);
+  static const THREAD_ID = MMSColumn._(_SmsProjections.THREAD_ID);
+  static const TYPE = MMSColumn._(_SmsProjections.TYPE);
+
+  @override
+  String get _name => _columnName;
 }

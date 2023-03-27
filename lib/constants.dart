@@ -6,6 +6,7 @@ const _BACKGROUND_CHANNEL = 'plugins.shounakmulay.com/background_sms_channel';
 const HANDLE_BACKGROUND_MESSAGE = "handleBackgroundMessage";
 const BACKGROUND_SERVICE_INITIALIZED = "backgroundServiceInitialized";
 const GET_ALL_INBOX_SMS = "getAllInboxSms";
+const GET_ALL_INBOX_MMS = "getAllInboxMMS";
 const GET_ALL_SENT_SMS = "getAllSentSms";
 const GET_ALL_DRAFT_SMS = "getAllDraftSms";
 const GET_ALL_CONVERSATIONS = "getAllConversations";
@@ -141,6 +142,13 @@ const DEFAULT_SMS_COLUMNS = [
   SmsColumn.ADDRESS,
   SmsColumn.BODY,
   SmsColumn.DATE
+];
+
+const DEFAULT_MMS_COLUMNS = [
+  MMSColumn.ID,
+  MMSColumn.ADDRESS,
+  MMSColumn.BODY,
+  MMSColumn.DATE
 ];
 
 const INCOMING_SMS_COLUMNS = [
