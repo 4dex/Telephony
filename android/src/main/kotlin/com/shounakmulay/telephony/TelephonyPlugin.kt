@@ -3,7 +3,12 @@ package com.shounakmulay.telephony
 import android.content.Context
 import androidx.annotation.NonNull
 import com.shounakmulay.telephony.sms.IncomingSmsHandler
+// import com.shounakmulay.telephony.mms.IncomingMMSHandler
+// import com.shounakmulay.telephony.mms.IncomingMMSReceiver
+import com.shounakmulay.telephony.mms.MMSMethodCallHandler
+import com.shounakmulay.telephony.mms.MMSController
 import com.shounakmulay.telephony.utils.Constants.CHANNEL_SMS
+import com.shounakmulay.telephony.utils.Constants.CHANNEL_MMS
 import com.shounakmulay.telephony.sms.IncomingSmsReceiver
 import com.shounakmulay.telephony.sms.SmsController
 import com.shounakmulay.telephony.sms.SmsMethodCallHandler
@@ -63,6 +68,14 @@ class TelephonyPlugin : FlutterPlugin, ActivityAware {
     smsChannel = MethodChannel(messenger, CHANNEL_SMS)
     smsChannel.setMethodCallHandler(smsMethodCallHandler)
     smsMethodCallHandler.setForegroundChannel(smsChannel)
+  
+    mmsController = MMSController(context)
+    permissionsController = PermissionsController(context)
+    mmsMethodCallHandler = MMSMethodCallHandler(context, mmsController, permissionsController)
+
+    mmsChannel = MethodChannel(messenger, CHANNEL_MMS)
+    mmsChannel.setMethodCallHandler(mmsMethodCallHandler)
+    mmsMethodCallHandler.setForegroundChannel(mmsChannel)
   }
 
   private fun tearDownPlugin() {

@@ -39,6 +39,11 @@ class PermissionsController(private val context: Context) {
     val permissions = getListedPermissions()
     return permissions.filter { permission -> SMS_PERMISSIONS.contains(permission) }
   }
+ 
+  fun getMMSPermissions(): List<String> {
+    val permissions = getListedPermissions()
+    return permissions.filter { permission -> SMS_PERMISSIONS.contains(permission) }
+  }
 
   fun getPhonePermissions(): List<String> {
     val permissions = getListedPermissions()

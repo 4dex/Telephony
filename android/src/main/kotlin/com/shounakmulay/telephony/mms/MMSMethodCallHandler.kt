@@ -1,4 +1,4 @@
-package com.shounakmulay.telephony.sms
+package com.shounakmulay.telephony.mms
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -10,7 +10,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.shounakmulay.telephony.PermissionsController
-import com.shounakmulay.telephony.utils.ActionType
+import com.shounakmulay.telephony.utils.MMSActionType
 import com.shounakmulay.telephony.utils.Constants
 import com.shounakmulay.telephony.utils.Constants.ADDRESS
 import com.shounakmulay.telephony.utils.Constants.BACKGROUND_HANDLE
@@ -33,13 +33,13 @@ import com.shounakmulay.telephony.utils.Constants.SETUP_HANDLE
 import com.shounakmulay.telephony.utils.Constants.SHARED_PREFERENCES_NAME
 import com.shounakmulay.telephony.utils.Constants.SHARED_PREFS_DISABLE_BACKGROUND_EXE
 import com.shounakmulay.telephony.utils.Constants.SMS_BACKGROUND_REQUEST_CODE
-import com.shounakmulay.telephony.utils.Constants.SMS_DELIVERED
+import com.shounakmulay.telephony.utils.Constants.MMS_DELIVERED
 import com.shounakmulay.telephony.utils.Constants.SMS_QUERY_REQUEST_CODE
 import com.shounakmulay.telephony.utils.Constants.SMS_SEND_REQUEST_CODE
-import com.shounakmulay.telephony.utils.Constants.SMS_SENT
+import com.shounakmulay.telephony.utils.Constants.MMS_SENT
 import com.shounakmulay.telephony.utils.Constants.SORT_ORDER
 import com.shounakmulay.telephony.utils.Constants.WRONG_METHOD_TYPE
-import com.shounakmulay.telephony.utils.ContentUri
+import com.shounakmulay.telephony.utils.MMSContentUri
 import com.shounakmulay.telephony.utils.MMSAction
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -48,7 +48,7 @@ import io.flutter.plugin.common.PluginRegistry
 
 class MMSMethodCallHandler(
     private val context: Context,
-    private val smsController: SmsController,
+    private val mmsController: MMSController,
     private val permissionsController: PermissionsController
 ) : PluginRegistry.RequestPermissionsResultListener,
     MethodChannel.MethodCallHandler,
@@ -86,7 +86,7 @@ class MMSMethodCallHandler(
     }
 
     when (action.toActionType()) {
-      ActionType.GET_SMS -> {
+      MMSActionType.GET_MMS -> {
         projection = call.argument(PROJECTION)
         selection = call.argument(SELECTION)
         selectionArgs = call.argument(SELECTION_ARGS)
@@ -94,7 +94,15 @@ class MMSMethodCallHandler(
 
         handleMethod(action, SMS_QUERY_REQUEST_CODE)
       }
-      ActionType.SEND_SMS -> {
+      MMSActionType.GET_SMS -> {
+        projection = call.argument(PROJECTION)
+        selection = call.argument(SELECTION)
+        selectionArgs = call.argument(SELECTION_ARGS)
+        sortOrder = call.argument(SORT_ORDER)
+
+        handleMethod(action, SMS_QUERY_REQUEST_CODE)
+      }
+      MMSActionType.SEND_MMS -> {
         if (call.hasArgument(MESSAGE_BODY)
             && call.hasArgument(ADDRESS)) {
           val messageBody = call.argument<String>(MESSAGE_BODY)
@@ -111,24 +119,41 @@ class MMSMethodCallHandler(
         }
         handleMethod(action, SMS_SEND_REQUEST_CODE)
       }
-      ActionType.BACKGROUND -> {
-        if (call.hasArgument(SETUP_HANDLE)
-            && call.hasArgument(BACKGROUND_HANDLE)) {
-          val setupHandle = call.argument<Long>(SETUP_HANDLE)
-          val backgroundHandle = call.argument<Long>(BACKGROUND_HANDLE)
-          if (setupHandle == null || backgroundHandle == null) {
-            result.error(ILLEGAL_ARGUMENT, "Setup handle or background handle missing", null)
+      MMSActionType.SEND_SMS -> {
+        if (call.hasArgument(MESSAGE_BODY)
+            && call.hasArgument(ADDRESS)) {
+          val messageBody = call.argument<String>(MESSAGE_BODY)
+          val address = call.argument<String>(ADDRESS)
+          if (messageBody.isNullOrBlank() || address.isNullOrBlank()) {
+            result.error(ILLEGAL_ARGUMENT, Constants.MESSAGE_OR_ADDRESS_CANNOT_BE_NULL, null)
             return
           }
 
-          this.setupHandle = setupHandle
-          this.backgroundHandle = backgroundHandle
+          this.messageBody = messageBody
+          this.address = address
+
+          listenStatus = call.argument(LISTEN_STATUS) ?: false
         }
-        handleMethod(action, SMS_BACKGROUND_REQUEST_CODE)
+        handleMethod(action, SMS_SEND_REQUEST_CODE)
       }
-      ActionType.GET -> handleMethod(action, GET_STATUS_REQUEST_CODE)
-      ActionType.PERMISSION -> handleMethod(action, PERMISSION_REQUEST_CODE)
-      ActionType.CALL -> {
+      // MMSActionType.BACKGROUND -> {
+      //   if (call.hasArgument(SETUP_HANDLE)
+      //       && call.hasArgument(BACKGROUND_HANDLE)) {
+      //     val setupHandle = call.argument<Long>(SETUP_HANDLE)
+      //     val backgroundHandle = call.argument<Long>(BACKGROUND_HANDLE)
+      //     if (setupHandle == null || backgroundHandle == null) {
+      //       result.error(ILLEGAL_ARGUMENT, "Setup handle or background handle missing", null)
+      //       return
+      //     }
+
+      //     this.setupHandle = setupHandle
+      //     this.backgroundHandle = backgroundHandle
+      //   }
+      //   handleMethod(action, SMS_BACKGROUND_REQUEST_CODE)
+      // }
+      MMSActionType.GET -> handleMethod(action, GET_STATUS_REQUEST_CODE)
+      MMSActionType.PERMISSION -> handleMethod(action, PERMISSION_REQUEST_CODE)
+      MMSActionType.CALL -> {
         if (call.hasArgument(PHONE_NUMBER)) {
           val phoneNumber = call.argument<String>(PHONE_NUMBER)
 
@@ -156,12 +181,14 @@ class MMSMethodCallHandler(
   private fun execute(MMSAction: MMSAction) {
     try {
       when (MMSAction.toActionType()) {
-        ActionType.GET_SMS -> handleGetMMSActions(MMSAction)
-        ActionType.SEND_SMS -> handleSendMMSActions(MMSAction)
-        ActionType.BACKGROUND -> handleBackgroundActions(MMSAction)
-        ActionType.GET -> handleGetActions(MMSAction)
-        ActionType.PERMISSION -> result.success(true)
-        ActionType.CALL -> handleCallActions(MMSAction)
+        MMSActionType.GET_MMS -> handleGetMMSActions(MMSAction)
+        MMSActionType.SEND_MMS -> handleSendMMSActions(MMSAction)
+        MMSActionType.GET_SMS -> handleGetMMSActions(MMSAction)
+        MMSActionType.SEND_SMS -> handleSendMMSActions(MMSAction)
+        // MMSActionType.BACKGROUND -> handleBackgroundActions(MMSAction)
+        MMSActionType.GET -> handleGetActions(MMSAction)
+        MMSActionType.PERMISSION -> result.success(true)
+        MMSActionType.CALL -> handleCallActions(MMSAction)
       }
     } catch (e: IllegalArgumentException) {
       result.error(ILLEGAL_ARGUMENT, WRONG_METHOD_TYPE, null)
@@ -170,22 +197,22 @@ class MMSMethodCallHandler(
     }
   }
 
-  private fun handleGetMMSActions(MMSAction: MMSAction) {
+  private fun handleGetMMSActions(mmsAction: MMSAction) {
     if (projection == null) {
-      projection = if (MMSAction == MMSAction.GET_CONVERSATIONS) DEFAULT_CONVERSATION_PROJECTION else DEFAULT_SMS_PROJECTION
+      projection = if (mmsAction == MMSAction.GET_CONVERSATIONS) DEFAULT_CONVERSATION_PROJECTION else DEFAULT_SMS_PROJECTION
     }
-    val contentUri = when (MMSAction) {
-      MMSAction.GET_INBOX -> ContentUri.INBOX
-      MMSAction.GET_SENT -> ContentUri.SENT
-      MMSAction.GET_DRAFT -> ContentUri.DRAFT
-      MMSAction.GET_CONVERSATIONS -> ContentUri.CONVERSATIONS
+    val contentUri = when (mmsAction) {
+      MMSAction.GET_INBOX -> MMSContentUri.INBOX
+      MMSAction.GET_SENT -> MMSContentUri.SENT
+      MMSAction.GET_DRAFT -> MMSContentUri.DRAFT
+      // MMSAction.GET_CONVERSATIONS -> MMSContentUri.CONVERSATIONS
       else -> throw IllegalArgumentException()
     }
-    val messages = smsController.getMessages(contentUri, projection!!, selection, selectionArgs, sortOrder)
+    val messages = mmsController.getMessages(contentUri, projection!!, selection, selectionArgs, sortOrder)
     result.success(messages)
   }
 
-  private fun handleSendMMSActions(MMSAction: MMSAction) {
+  private fun handleSendMMSActions(mmsAction: MMSAction) {
     if (listenStatus) {
       val intentFilter = IntentFilter().apply {
         addAction(Constants.ACTION_SMS_SENT)
@@ -193,38 +220,39 @@ class MMSMethodCallHandler(
       }
       context.applicationContext.registerReceiver(this, intentFilter)
     }
-    when (MMSAction) {
-      MMSAction.SEND_SMS -> smsController.sendSms(address, messageBody, listenStatus)
-      MMSAction.SEND_MULTIPART_SMS -> smsController.sendMultipartSms(address, messageBody, listenStatus)
-      MMSAction.SEND_SMS_INTENT -> smsController.sendSmsIntent(address, messageBody)
+    when (mmsAction) {
+      MMSAction.SEND_MMS -> mmsController.sendMMS(address, messageBody, listenStatus)
+      MMSAction.SEND_MULTIPART_MMS -> mmsController.sendMultipartMMS(address, messageBody, listenStatus)
+      MMSAction.SEND_MMS_INTENT -> mmsController.sendMMSIntent(address, messageBody)
       else -> throw IllegalArgumentException()
     }
     result.success(null)
   }
 
-  private fun handleBackgroundActions(MMSAction: MMSAction) {
-    when (MMSAction) {
-      MMSAction.START_BACKGROUND_SERVICE -> {
-        val preferences = context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
-        preferences.edit().putBoolean(SHARED_PREFS_DISABLE_BACKGROUND_EXE, false).apply()
-        IncomingSmsHandler.setBackgroundSetupHandle(context, setupHandle)
-        IncomingSmsHandler.setBackgroundMessageHandle(context, backgroundHandle)
-      }
-      MMSAction.BACKGROUND_SERVICE_INITIALIZED -> {
-        IncomingSmsHandler.onChannelInitialized(context.applicationContext)
-      }
-      MMSAction.DISABLE_BACKGROUND_SERVICE -> {
-        val preferences = context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
-        preferences.edit().putBoolean(SHARED_PREFS_DISABLE_BACKGROUND_EXE, true).apply()
-      }
-      else -> throw IllegalArgumentException()
-    }
-  }
+// GRANTDO this is part of incoming MMS Handler
+  // private fun handleBackgroundActions(mmsAction: MMSAction) {
+  //   when (mmsAction) {
+  //     MMSAction.START_BACKGROUND_SERVICE -> {
+  //       val preferences = context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+  //       preferences.edit().putBoolean(SHARED_PREFS_DISABLE_BACKGROUND_EXE, false).apply()
+  //       IncomingMMSHandler.setBackgroundSetupHandle(context, setupHandle)
+  //       IncomingMMSHandler.setBackgroundMessageHandle(context, backgroundHandle)
+  //     }
+  //     MMSAction.BACKGROUND_SERVICE_INITIALIZED -> {
+  //       IncomingMMSHandler.onChannelInitialized(context.applicationContext)
+  //     }
+  //     MMSAction.DISABLE_BACKGROUND_SERVICE -> {
+  //       val preferences = context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+  //       preferences.edit().putBoolean(SHARED_PREFS_DISABLE_BACKGROUND_EXE, true).apply()
+  //     }
+  //     else -> throw IllegalArgumentException()
+  //   }
+  // }
 
   @SuppressLint("MissingPermission")
-  private fun handleGetActions(MMSAction: MMSAction) {
-    smsController.apply {
-      val value: Any = when (MMSAction) {
+  private fun handleGetActions(mmsAction: MMSAction) {
+    mmsController.apply {
+      val value: Any = when (mmsAction) {
         MMSAction.IS_SMS_CAPABLE -> isSmsCapable()
         MMSAction.GET_CELLULAR_DATA_STATE -> getCellularDataState()
         MMSAction.GET_CALL_STATE -> getCallState()
@@ -261,10 +289,10 @@ class MMSMethodCallHandler(
   }
 
   @SuppressLint("MissingPermission")
-  private fun handleCallActions(MMSAction: MMSAction) {
-    when (MMSAction) {
-      MMSAction.OPEN_DIALER -> smsController.openDialer(phoneNumber)
-      MMSAction.DIAL_PHONE_NUMBER -> smsController.dialPhoneNumber(phoneNumber)
+  private fun handleCallActions(mmsAction: MMSAction) {
+    when (mmsAction) {
+      MMSAction.OPEN_DIALER -> mmsController.openDialer(phoneNumber)
+      MMSAction.DIAL_PHONE_NUMBER -> mmsController.dialPhoneNumber(phoneNumber)
       else -> throw IllegalArgumentException()
     }
   }
@@ -275,9 +303,9 @@ class MMSMethodCallHandler(
    *
    * If not granted then it will request the permission from the user.
    */
-  private fun handleMethod(MMSAction: MMSAction, requestCode: Int) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || checkOrRequestPermission(MMSAction, requestCode)) {
-      execute(MMSAction)
+  private fun handleMethod(mmsAction: MMSAction, requestCode: Int) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || checkOrRequestPermission(mmsAction, requestCode)) {
+      execute(mmsAction)
     }
   }
 
@@ -285,22 +313,22 @@ class MMSMethodCallHandler(
    * Check and request if necessary for all the SMS permissions listed in the manifest
    */
   @RequiresApi(Build.VERSION_CODES.M)
-  fun checkOrRequestPermission(MMSAction: MMSAction, requestCode: Int): Boolean {
-    this.action = MMSAction
+  fun checkOrRequestPermission(mmsAction: MMSAction, requestCode: Int): Boolean {
+    this.action = mmsAction
     this.requestCode = requestCode
-    when (MMSAction) {
+    when (mmsAction) {
       MMSAction.GET_INBOX,
       MMSAction.GET_SENT,
       MMSAction.GET_DRAFT,
       MMSAction.GET_CONVERSATIONS,
-      MMSAction.SEND_SMS,
-      MMSAction.SEND_MULTIPART_SMS,
-      MMSAction.SEND_SMS_INTENT,
+      MMSAction.SEND_MMS,
+      MMSAction.SEND_MULTIPART_MMS,
+      MMSAction.SEND_MMS_INTENT,
       MMSAction.START_BACKGROUND_SERVICE,
-      MMSAction.BACKGROUND_SERVICE_INITIALIZED,
+      // MMSAction.BACKGROUND_SERVICE_INITIALIZED,
       MMSAction.DISABLE_BACKGROUND_SERVICE,
-      MMSAction.REQUEST_SMS_PERMISSIONS -> {
-        val permissions = permissionsController.getSmsPermissions()
+      MMSAction.REQUEST_MMS_PERMISSIONS -> {
+        val permissions = permissionsController.getMMSPermissions()
         return checkOrRequestPermission(permissions, requestCode)
       }
       MMSAction.GET_DATA_NETWORK_TYPE,
@@ -314,8 +342,8 @@ class MMSMethodCallHandler(
         val permissions = permissionsController.getServiceStatePermissions()
         return checkOrRequestPermission(permissions, requestCode)
       }
-      MMSAction.REQUEST_PHONE_AND_SMS_PERMISSIONS -> {
-        val permissions = listOf(permissionsController.getSmsPermissions(), permissionsController.getPhonePermissions()).flatten()
+      MMSAction.REQUEST_PHONE_AND_MMS_PERMISSIONS -> {
+        val permissions = listOf(permissionsController.getMMSPermissions(), permissionsController.getPhonePermissions()).flatten()
         return checkOrRequestPermission(permissions, requestCode)
       }
       MMSAction.IS_SMS_CAPABLE,
@@ -390,9 +418,9 @@ class MMSMethodCallHandler(
   override fun onReceive(ctx: Context?, intent: Intent?) {
     if (intent != null) {
       when (intent.action) {
-        Constants.ACTION_SMS_SENT -> foregroundChannel.invokeMethod(SMS_SENT, null)
-        Constants.ACTION_SMS_DELIVERED -> {
-          foregroundChannel.invokeMethod(SMS_DELIVERED, null)
+        Constants.ACTION_MMS_SENT -> foregroundChannel.invokeMethod(MMS_SENT, null)
+        Constants.ACTION_MMS_DELIVERED -> {
+          foregroundChannel.invokeMethod(MMS_DELIVERED, null)
           context.unregisterReceiver(this)
         }
       }

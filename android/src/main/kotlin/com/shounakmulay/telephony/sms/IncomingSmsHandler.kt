@@ -259,11 +259,12 @@ object IncomingSmsHandler : MethodChannel.MethodCallHandler {
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        if (SmsAction.fromMethod(call.method) == SmsAction.BACKGROUND_SERVICE_INITIALIZED) {
-            onChannelInitialized(
-                ContextHolder.applicationContext
-                    ?: throw RuntimeException("Context not initialised!")
-            )
-        }
+        // if (SmsAction.fromMethod(call.method) == SmsAction.BACKGROUND_SERVICE_INITIALIZED) {
+        //     onChannelInitialized(
+        //         ContextHolder.applicationContext
+        //             ?: throw RuntimeException("Context not initialised!")
+        //     )
+        // }
+        print("onMethodCall: ${call.method}")
     }
 }
