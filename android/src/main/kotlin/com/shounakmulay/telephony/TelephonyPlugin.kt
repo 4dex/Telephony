@@ -7,8 +7,7 @@ import com.shounakmulay.telephony.sms.IncomingSmsHandler
 // import com.shounakmulay.telephony.mms.IncomingMMSReceiver
 import com.shounakmulay.telephony.mms.MMSMethodCallHandler
 import com.shounakmulay.telephony.mms.MMSController
-import com.shounakmulay.telephony.utils.Constants.CHANNEL_SMS
-import com.shounakmulay.telephony.utils.Constants.CHANNEL_MMS
+import com.shounakmulay.telephony.utils.Constants.CHANNEL
 import com.shounakmulay.telephony.sms.IncomingSmsReceiver
 import com.shounakmulay.telephony.sms.SmsController
 import com.shounakmulay.telephony.sms.SmsMethodCallHandler
@@ -21,10 +20,16 @@ import io.flutter.plugin.common.*
 class TelephonyPlugin : FlutterPlugin, ActivityAware {
 
   private lateinit var smsChannel: MethodChannel
+  
+  private lateinit var mmsChannel: MethodChannel
 
   private lateinit var smsMethodCallHandler: SmsMethodCallHandler
+  
+  private lateinit var mmsMethodCallHandler: MMSMethodCallHandler
 
   private lateinit var smsController: SmsController
+  
+  private lateinit var mmsController: MMSController
 
   private lateinit var binaryMessenger: BinaryMessenger
 
@@ -61,25 +66,30 @@ class TelephonyPlugin : FlutterPlugin, ActivityAware {
   }
 
   private fun setupPlugin(context: Context, messenger: BinaryMessenger) {
-    smsController = SmsController(context)
     permissionsController = PermissionsController(context)
-    smsMethodCallHandler = SmsMethodCallHandler(context, smsController, permissionsController)
 
-    smsChannel = MethodChannel(messenger, CHANNEL_SMS)
+    smsController = SmsController(context)
+    mmsController = MMSController(context)
+    
+    smsMethodCallHandler = SmsMethodCallHandler(context, smsController, permissionsController)
+    // TODO: the permission controller here is asking for extras that the app didn't expect.
+    // mmsMethodCallHandler = MMSMethodCallHandler(context, mmsController, permissionsController)
+
+    smsChannel = MethodChannel(messenger, CHANNEL)
     smsChannel.setMethodCallHandler(smsMethodCallHandler)
     smsMethodCallHandler.setForegroundChannel(smsChannel)
-  
-    mmsController = MMSController(context)
-    permissionsController = PermissionsController(context)
-    mmsMethodCallHandler = MMSMethodCallHandler(context, mmsController, permissionsController)
 
-    mmsChannel = MethodChannel(messenger, CHANNEL_MMS)
-    mmsChannel.setMethodCallHandler(mmsMethodCallHandler)
-    mmsMethodCallHandler.setForegroundChannel(mmsChannel)
+
+    // TODO: the telephony plugin is exposing a getAllInboxMMS method on the channel. but the channel doesn't implement it.
+    // Start combining the MMS methods back into the smsMethodCallHandler so that it has both mms and sms methods. For now, just need to get inbox mmss.
+    // mmsChannel = MethodChannel(messenger, CHANNEL)
+    // mmsChannel.setMethodCallHandler(mmsMethodCallHandler)
+    // mmsMethodCallHandler.setForegroundChannel(mmsChannel)
   }
 
   private fun tearDownPlugin() {
     IncomingSmsReceiver.foregroundSmsChannel = null
+    smsChannel.setMethodCallHandler(null)
     smsChannel.setMethodCallHandler(null)
   }
 

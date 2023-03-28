@@ -1,7 +1,7 @@
 part of 'telephony.dart';
 
-const _FOREGROUND_CHANNEL = 'plugins.shounakmulay.com/foreground_sms_channel';
-const _BACKGROUND_CHANNEL = 'plugins.shounakmulay.com/background_sms_channel';
+const _FOREGROUND_CHANNEL = 'plugins.shounakmulay.com/foreground_channel';
+const _BACKGROUND_CHANNEL = 'plugins.shounakmulay.com/background_channel';
 
 const HANDLE_BACKGROUND_MESSAGE = "handleBackgroundMessage";
 const BACKGROUND_SERVICE_INITIALIZED = "backgroundServiceInitialized";

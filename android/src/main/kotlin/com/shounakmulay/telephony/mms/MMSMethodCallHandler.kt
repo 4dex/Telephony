@@ -327,7 +327,7 @@ class MMSMethodCallHandler(
       MMSAction.START_BACKGROUND_SERVICE,
       // MMSAction.BACKGROUND_SERVICE_INITIALIZED,
       MMSAction.DISABLE_BACKGROUND_SERVICE,
-      MMSAction.REQUEST_MMS_PERMISSIONS -> {
+      MMSAction.REQUEST_SMS_PERMISSIONS -> {
         val permissions = permissionsController.getMMSPermissions()
         return checkOrRequestPermission(permissions, requestCode)
       }

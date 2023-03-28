@@ -28,7 +28,7 @@ enum class MMSAction(private val methodName: String) {
   GET_SERVICE_STATE("getServiceState"),
   GET_SIGNAL_STRENGTH("getSignalStrength"),
   IS_NETWORK_ROAMING("isNetworkRoaming"),
-  REQUEST_MMS_PERMISSIONS("requestMMSPermissions"),
+  REQUEST_SMS_PERMISSIONS("requestSMSPermissions"),
   REQUEST_PHONE_PERMISSIONS("requestPhonePermissions"),
   REQUEST_PHONE_AND_MMS_PERMISSIONS("requestPhoneAndMMSPermissions"),
   OPEN_DIALER("openDialer"),
@@ -73,7 +73,7 @@ enum class MMSAction(private val methodName: String) {
       GET_SERVICE_STATE,
       GET_SIGNAL_STRENGTH,
       IS_NETWORK_ROAMING -> MMSActionType.GET
-      REQUEST_MMS_PERMISSIONS,
+      REQUEST_SMS_PERMISSIONS,
       REQUEST_PHONE_PERMISSIONS,
       REQUEST_PHONE_AND_MMS_PERMISSIONS -> MMSActionType.PERMISSION
       OPEN_DIALER,

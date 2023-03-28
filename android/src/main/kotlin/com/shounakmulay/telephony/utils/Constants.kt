@@ -6,10 +6,10 @@ import android.provider.Telephony
 object Constants {
   
   // Channels
-  const val CHANNEL_SMS = "plugins.shounakmulay.com/foreground_sms_channel"
-  const val CHANNEL_SMS_BACKGROUND = "plugins.shounakmulay.com/background_sms_channel"
-  const val CHANNEL_MMS = "plugins.shounakmulay.com/foreground_mms_channel"
-  const val CHANNEL_MMS_BACKGROUND = "plugins.shounakmulay.com/background_mms_channel"
+  const val CHANNEL = "plugins.shounakmulay.com/foreground_channel"
+  const val CHANNEL_BACKGROUND = "plugins.shounakmulay.com/background_channel"
+  // const val CHANNEL_MMS = "plugins.shounakmulay.com/foreground_mms_channel"
+  // const val CHANNEL_MMS_BACKGROUND = "plugins.shounakmulay.com/background_mms_channel"
 
   // Intent Actions
   const val ACTION_SMS_SENT = "plugins.shounakmulay.intent.ACTION_SMS_SENT"

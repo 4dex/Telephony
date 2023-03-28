@@ -158,7 +158,7 @@ package com.shounakmulay.telephony.mms
 //         backgroundFlutterEngine.dartExecutor.executeDartCallback(dartEntryPoint)
 
 //         backgroundChannel =
-//             MethodChannel(backgroundFlutterEngine.dartExecutor, Constants.CHANNEL_SMS_BACKGROUND)
+//             MethodChannel(backgroundFlutterEngine.dartExecutor, Constants.CHANNEL_BACKGROUND)
 //         backgroundChannel.setMethodCallHandler(this)
 //     }
 
