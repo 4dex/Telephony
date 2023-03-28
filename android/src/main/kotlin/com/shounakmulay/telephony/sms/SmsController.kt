@@ -58,6 +58,42 @@ class SmsController(private val context: Context) {
         cursor?.close()
         return messages
     }
+    
+    fun getMMSMessages(
+        contentUri: ContentUri,
+        projection: List<String>,
+        selection: String?,
+        selectionArgs: List<String>?,
+        sortOrder: String?
+    ): List<HashMap<String, String?>> {
+        // print out the function name
+        println("getMMSMessages called")
+
+        val messages = mutableListOf<HashMap<String, String?>>()
+
+        val cursor = context.contentResolver.query(
+            contentUri.uri,
+            projection.toTypedArray(),
+            selection,
+            selectionArgs?.toTypedArray(),
+            sortOrder
+        )
+
+        while (cursor != null && cursor.moveToNext()) {
+            val dataObject = HashMap<String, String?>(projection.size)
+            for (columnName in cursor.columnNames) {
+                val columnIndex = cursor.getColumnIndex(columnName)
+                if (columnIndex >= 0) {
+                    val value = cursor.getString(columnIndex)
+                    dataObject[columnName] = value
+                }
+            }
+            messages.add(dataObject)
+        }
+        cursor?.close()
+
+        return messages
+    }
 
     // SEND SMS
     fun sendSms(destinationAddress: String, messageBody: String, listenStatus: Boolean) {

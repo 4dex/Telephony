@@ -11,6 +11,14 @@ enum class SmsAction(private val methodName: String) {
   SEND_SMS("sendSms"),
   SEND_MULTIPART_SMS("sendMultipartSms"),
   SEND_SMS_INTENT("sendSmsIntent"),
+
+  // MMS
+  GET_INBOX_MMS("getAllInboxMMS"),
+  GET_SENT_MMS("getAllSentMMS"),
+  GET_DRAFT_MMS("getAllDraftMMS"),
+  // SEND_MMS("sendMMS"),
+  // SEND_MMS_INTENT("sendMMSIntent"),
+
   START_BACKGROUND_SERVICE("startBackgroundService"),
   DISABLE_BACKGROUND_SERVICE("disableBackgroundService"),
   BACKGROUND_SERVICE_INITIALIZED("backgroundServiceInitialized"),
@@ -56,6 +64,14 @@ enum class SmsAction(private val methodName: String) {
       SEND_MULTIPART_SMS,
       SEND_SMS_INTENT,
       NO_SUCH_METHOD -> ActionType.SEND_SMS
+
+      // MMS
+      GET_INBOX_MMS,
+      GET_SENT_MMS,
+      GET_DRAFT_MMS -> ActionType.GET_MMS
+      // SEND_MMS,
+      // SEND_MMS_INTENT -> ActionType.SEND_MMS
+
       START_BACKGROUND_SERVICE,
       DISABLE_BACKGROUND_SERVICE,
       BACKGROUND_SERVICE_INITIALIZED -> ActionType.BACKGROUND
@@ -82,13 +98,18 @@ enum class SmsAction(private val methodName: String) {
   }
 }
 
+// MMS added (get and send)
 enum class ActionType {
-  GET_SMS, SEND_SMS, BACKGROUND, GET, PERMISSION, CALL
+  GET_SMS, SEND_SMS, BACKGROUND, GET, PERMISSION, CALL, GET_MMS//, SEND_MMS
 }
 
+// MMS: http://android.cn-mirrors.com/reference/android/provider/Telephony.Mms.html
 enum class ContentUri(val uri: Uri) {
   INBOX(Telephony.Sms.Inbox.CONTENT_URI),
   SENT(Telephony.Sms.Sent.CONTENT_URI),
   DRAFT(Telephony.Sms.Draft.CONTENT_URI),
-  CONVERSATIONS(Telephony.Sms.Conversations.CONTENT_URI);
+  CONVERSATIONS(Telephony.Sms.Conversations.CONTENT_URI),
+  MMS_INBOX(Telephony.Mms.Inbox.CONTENT_URI),
+  MMS_SENT(Telephony.Mms.Sent.CONTENT_URI),
+  MMS_DRAFT(Telephony.Mms.Draft.CONTENT_URI);
 }

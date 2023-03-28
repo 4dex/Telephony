@@ -111,6 +111,31 @@ class SmsMethodCallHandler(
         }
         handleMethod(action, SMS_SEND_REQUEST_CODE)
       }
+      ActionType.GET_MMS -> {
+        projection = call.argument(PROJECTION)
+        selection = call.argument(SELECTION)
+        selectionArgs = call.argument(SELECTION_ARGS)
+        sortOrder = call.argument(SORT_ORDER)
+
+        handleMethod(action, SMS_QUERY_REQUEST_CODE)
+      }
+      // ActionType.SEND_MMS -> {
+      //   if (call.hasArgument(MESSAGE_BODY)
+      //       && call.hasArgument(ADDRESS)) {
+      //     val messageBody = call.argument<String>(MESSAGE_BODY)
+      //     val address = call.argument<String>(ADDRESS)
+      //     if (messageBody.isNullOrBlank() || address.isNullOrBlank()) {
+      //       result.error(ILLEGAL_ARGUMENT, Constants.MESSAGE_OR_ADDRESS_CANNOT_BE_NULL, null)
+      //       return
+      //     }
+
+      //     this.messageBody = messageBody
+      //     this.address = address
+
+      //     listenStatus = call.argument(LISTEN_STATUS) ?: false
+      //   }
+      //   handleMethod(action, SMS_SEND_REQUEST_CODE)
+      // }
       ActionType.BACKGROUND -> {
         if (call.hasArgument(SETUP_HANDLE)
             && call.hasArgument(BACKGROUND_HANDLE)) {
@@ -157,6 +182,7 @@ class SmsMethodCallHandler(
     try {
       when (smsAction.toActionType()) {
         ActionType.GET_SMS -> handleGetSmsActions(smsAction)
+        ActionType.GET_MMS -> handleGetMmsActions(smsAction)
         ActionType.SEND_SMS -> handleSendSmsActions(smsAction)
         ActionType.BACKGROUND -> handleBackgroundActions(smsAction)
         ActionType.GET -> handleGetActions(smsAction)
@@ -182,6 +208,20 @@ class SmsMethodCallHandler(
       else -> throw IllegalArgumentException()
     }
     val messages = smsController.getMessages(contentUri, projection!!, selection, selectionArgs, sortOrder)
+    result.success(messages)
+  }
+
+  private fun handleGetMmsActions(smsAction: SmsAction) {
+    if (projection == null) {
+      projection = if (smsAction == SmsAction.GET_CONVERSATIONS) DEFAULT_CONVERSATION_PROJECTION else DEFAULT_SMS_PROJECTION
+    }
+    val contentUri = when (smsAction) {
+      SmsAction.GET_INBOX_MMS -> ContentUri.MMS_INBOX
+      SmsAction.GET_SENT_MMS -> ContentUri.MMS_SENT
+      SmsAction.GET_DRAFT_MMS -> ContentUri.MMS_DRAFT
+      else -> throw IllegalArgumentException()
+    }
+    val messages = smsController.getMMSMessages(contentUri, projection!!, selection, selectionArgs, sortOrder)
     result.success(messages)
   }
 
@@ -293,6 +333,9 @@ class SmsMethodCallHandler(
       SmsAction.GET_SENT,
       SmsAction.GET_DRAFT,
       SmsAction.GET_CONVERSATIONS,
+      SmsAction.GET_INBOX_MMS,
+      SmsAction.GET_SENT_MMS,
+      SmsAction.GET_DRAFT_MMS,
       SmsAction.SEND_SMS,
       SmsAction.SEND_MULTIPART_SMS,
       SmsAction.SEND_SMS_INTENT,

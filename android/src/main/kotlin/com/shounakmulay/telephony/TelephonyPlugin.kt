@@ -5,8 +5,8 @@ import androidx.annotation.NonNull
 import com.shounakmulay.telephony.sms.IncomingSmsHandler
 // import com.shounakmulay.telephony.mms.IncomingMMSHandler
 // import com.shounakmulay.telephony.mms.IncomingMMSReceiver
-import com.shounakmulay.telephony.mms.MMSMethodCallHandler
-import com.shounakmulay.telephony.mms.MMSController
+// import com.shounakmulay.telephony.mms.MMSMethodCallHandler
+// import com.shounakmulay.telephony.mms.MMSController
 import com.shounakmulay.telephony.utils.Constants.CHANNEL
 import com.shounakmulay.telephony.sms.IncomingSmsReceiver
 import com.shounakmulay.telephony.sms.SmsController
@@ -20,16 +20,10 @@ import io.flutter.plugin.common.*
 class TelephonyPlugin : FlutterPlugin, ActivityAware {
 
   private lateinit var smsChannel: MethodChannel
-  
-  private lateinit var mmsChannel: MethodChannel
 
   private lateinit var smsMethodCallHandler: SmsMethodCallHandler
-  
-  private lateinit var mmsMethodCallHandler: MMSMethodCallHandler
 
   private lateinit var smsController: SmsController
-  
-  private lateinit var mmsController: MMSController
 
   private lateinit var binaryMessenger: BinaryMessenger
 
@@ -69,7 +63,6 @@ class TelephonyPlugin : FlutterPlugin, ActivityAware {
     permissionsController = PermissionsController(context)
 
     smsController = SmsController(context)
-    mmsController = MMSController(context)
     
     smsMethodCallHandler = SmsMethodCallHandler(context, smsController, permissionsController)
     // TODO: the permission controller here is asking for extras that the app didn't expect.
