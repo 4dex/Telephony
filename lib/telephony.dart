@@ -188,10 +188,14 @@ class Telephony {
       List<OrderBy>? sortOrder}) async {
     assert(_platform.isAndroid == true, "Can only be called on Android.");
     final args = _getArguments(columns, filter, sortOrder);
+    print("mms args from getInboxMMS telephony.dart");
+    print(args);
 
     final messages =
         await _foregroundChannel.invokeMethod<List?>(GET_ALL_INBOX_MMS, args);
 
+    print("mms messages from getInboxMMS telephony.dart");
+    print(messages);
     return messages
             ?.map((message) => MmsMessage.fromMap(message, columns))
             .toList(growable: false) ??
@@ -596,7 +600,6 @@ class SmsMessage {
   SmsMessage.fromMap(Map rawMessage, List<SmsColumn> columns) {
     final message = Map.castFrom<dynamic, dynamic, String, dynamic>(rawMessage);
     for (var column in columns) {
-      debugPrint('Column is ${column._columnName}');
       final value = message[column._columnName];
       switch (column._columnName) {
         case _SmsProjections.ID:
@@ -738,7 +741,6 @@ class MmsMessage {
   MmsMessage.fromMap(Map rawMessage, List<MMSColumn> columns) {
     final message = Map.castFrom<dynamic, dynamic, String, dynamic>(rawMessage);
     for (var column in columns) {
-      debugPrint('Column is ${column._columnName}');
       final value = message[column._columnName];
       switch (column._columnName) {
         case _SmsProjections.ID:
@@ -821,26 +823,27 @@ class MmsMessage {
   }
 }
 
-/// Represents all the possible parameters for a SMS
+/// Represents all the possible parameters for an MMS
+/// https://developer.android.com/reference/android/provider/Telephony.Mms
 class MMSColumn extends _TelephonyColumn {
   final String _columnName;
 
   const MMSColumn._(this._columnName);
 
   static const ID = MMSColumn._(_SmsProjections.ID);
-  static const ADDRESS = MMSColumn._(_SmsProjections.ADDRESS);
-  static const SERVICE_CENTER_ADDRESS =
-      MMSColumn._(_SmsProjections.SERVICE_CENTER_ADDRESS);
-  static const BODY = MMSColumn._(_SmsProjections.BODY);
   static const DATE = MMSColumn._(_SmsProjections.DATE);
-  static const DATE_SENT = MMSColumn._(_SmsProjections.DATE_SENT);
-  static const READ = MMSColumn._(_SmsProjections.READ);
-  static const SEEN = MMSColumn._(_SmsProjections.SEEN);
-  static const STATUS = MMSColumn._(_SmsProjections.STATUS);
-  static const SUBJECT = MMSColumn._(_SmsProjections.SUBJECT);
-  static const SUBSCRIPTION_ID = MMSColumn._(_SmsProjections.SUBSCRIPTION_ID);
-  static const THREAD_ID = MMSColumn._(_SmsProjections.THREAD_ID);
-  static const TYPE = MMSColumn._(_SmsProjections.TYPE);
+  // static const ADDRESS = MMSColumn._(_SmsProjections.ADDRESS);
+  // static const SERVICE_CENTER_ADDRESS =
+  //     MMSColumn._(_SmsProjections.SERVICE_CENTER_ADDRESS);
+  // static const BODY = MMSColumn._(_SmsProjections.BODY);
+  // static const DATE_SENT = MMSColumn._(_SmsProjections.DATE_SENT);
+  // static const READ = MMSColumn._(_SmsProjections.READ);
+  // static const SEEN = MMSColumn._(_SmsProjections.SEEN);
+  // static const STATUS = MMSColumn._(_SmsProjections.STATUS);
+  // static const SUBJECT = MMSColumn._(_SmsProjections.SUBJECT);
+  // static const SUBSCRIPTION_ID = MMSColumn._(_SmsProjections.SUBSCRIPTION_ID);
+  // static const THREAD_ID = MMSColumn._(_SmsProjections.THREAD_ID);
+  // static const TYPE = MMSColumn._(_SmsProjections.TYPE);
 
   @override
   String get _name => _columnName;

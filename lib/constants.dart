@@ -147,9 +147,7 @@ const DEFAULT_SMS_COLUMNS = [
 ];
 
 const DEFAULT_MMS_COLUMNS = [
-  MMSColumn.ID,
-  MMSColumn.ADDRESS,
-  MMSColumn.BODY,
+  MMSColumn.ID, // TODO figure out all these columns
   MMSColumn.DATE
 ];
 

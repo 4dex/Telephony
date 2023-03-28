@@ -71,6 +71,9 @@ class SmsController(private val context: Context) {
 
         val messages = mutableListOf<HashMap<String, String?>>()
 
+        // print the contentUri.uri
+        println(contentUri.uri)
+
         val cursor = context.contentResolver.query(
             contentUri.uri,
             projection.toTypedArray(),
@@ -80,8 +83,10 @@ class SmsController(private val context: Context) {
         )
 
         while (cursor != null && cursor.moveToNext()) {
+            println("cursor.moveToNext() called")
             val dataObject = HashMap<String, String?>(projection.size)
             for (columnName in cursor.columnNames) {
+                println(columnName)
                 val columnIndex = cursor.getColumnIndex(columnName)
                 if (columnIndex >= 0) {
                     val value = cursor.getString(columnIndex)
@@ -91,6 +96,7 @@ class SmsController(private val context: Context) {
             messages.add(dataObject)
         }
         cursor?.close()
+        println("cursor?.close() called")
 
         return messages
     }
